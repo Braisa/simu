@@ -49,12 +49,12 @@ subroutine lj_potential(rx, ry, rz)
 
                 potential = potential + r12i_ij - r6i_ij
                 f_mod = (2.d00 * r12i_ij - r6i_ij) * r2i_ij
-                fx(i) = f_mod * rx_ij
-                fx(j) = -fx(i)
-                fy(i) = f_mod * ry_ij
-                fy(j) = -fy(i)
-                fz(i) = f_mod * rz_ij
-                fz(j) = -fz(i)
+                fx(i) = fx(i) + f_mod * rx_ij
+                fx(j) = fx(j) - fx(i)
+                fy(i) = fy(i) + f_mod * ry_ij
+                fy(j) = fy(j) - fy(i)
+                fz(i) = fz(i) + f_mod * rz_ij
+                fz(j) = fz(j) - fz(i)
 
             end if
         
