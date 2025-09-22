@@ -72,6 +72,4 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
     fy = 24.d00 * fy
     fz = 24.d00 * fz
 
-    return
-
 end subroutine lj_potential
