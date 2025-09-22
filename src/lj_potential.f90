@@ -1,4 +1,4 @@
-subroutine lj_potential(rx, ry, rz)
+subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
 
     use get_kinds
     use fcc_parameters
@@ -8,8 +8,8 @@ subroutine lj_potential(rx, ry, rz)
     ! I/O variables
 
     real (kind = double), dimension(N), intent(IN) :: rx, ry, rz
-    real (kind = double) :: potential
-    real (kind = double), dimension(N) :: fx, fy, fz
+    real (kind = double), intent(OUT) :: potential
+    real (kind = double), dimension(N), intent(OUT) :: fx, fy, fz
 
     ! Auxiliary variables
 
@@ -37,6 +37,11 @@ subroutine lj_potential(rx, ry, rz)
             rx_ij = rx_i - rx(j)
             ry_ij = ry_i - ry(j)
             rz_ij = rz_i - rz(j)
+
+            rx_ij = rx_ij - l_box * dnint(rx_ij * li_box)
+            ry_ij = ry_ij - l_box * dnint(ry_ij * li_box)
+            rz_ij = rz_ij - l_box * dnint(rz_ij * li_box)
+
             r2_ij = rx_ij * rx_ij + ry_ij * ry_ij + rz_ij * rz_ij
 
             if (r2_ij < rc * rc) then
@@ -66,5 +71,7 @@ subroutine lj_potential(rx, ry, rz)
     fx = 24.d00 * fx
     fy = 24.d00 * fy
     fz = 24.d00 * fz
+
+    return
 
 end subroutine lj_potential
