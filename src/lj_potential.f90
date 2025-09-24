@@ -15,7 +15,7 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
 
     real (kind = double) :: rx_i, ry_i, rz_i
     real (kind = double) :: rx_ij, ry_ij, rz_ij
-    real (kind = double) :: r2_ij, r6_ij, r12_ij
+    real (kind = double) :: r2_ij
     real (kind = double) :: r2i_ij, r6i_ij, r12i_ij
     real (kind = double) :: f_mod
     integer (kind = int) :: i, j
@@ -38,19 +38,17 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
             ry_ij = ry_i - ry(j)
             rz_ij = rz_i - rz(j)
 
-            rx_ij = rx_ij - l_box * dnint(rx_ij * li_box)
-            ry_ij = ry_ij - l_box * dnint(ry_ij * li_box)
-            rz_ij = rz_ij - l_box * dnint(rz_ij * li_box)
+            rx_ij = rx_ij - L * dnint(rx_ij * Li)
+            ry_ij = ry_ij - L * dnint(ry_ij * Li)
+            rz_ij = rz_ij - L * dnint(rz_ij * Li)
 
             r2_ij = rx_ij * rx_ij + ry_ij * ry_ij + rz_ij * rz_ij
 
-            if (r2_ij < rc * rc) then
-
-                r6_ij = r2_ij * r2_ij * r2_ij
-                r12_ij = r6_ij * r6_ij
-                r2i_ij = r2_ij**(-1)
-                r6i_ij = r6_ij**(-1)
-                r12i_ij = r12_ij**(-1)
+            if (r2_ij < rc2) then
+                
+                r2i_ij = 1 / r2_ij
+                r6i_ij = r2i_ij * r2i_ij * r2i_ij
+                r12i_ij = r6i_ij * r6i_ij
 
                 potential = potential + r12i_ij - r6i_ij
                 f_mod = (2.d00 * r12i_ij - r6i_ij) * r2i_ij
