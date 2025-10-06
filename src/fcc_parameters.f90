@@ -5,8 +5,8 @@ module fcc_parameters
     implicit none
 
     integer (kind = int), parameter :: N = 500, k = 4
-    real (kind = double), parameter :: L = 10.d00, rc = 5.d00
-    real (kind = double), parameter :: Li = 1 / L, rc2 = rc * rc
+    real (kind = double), parameter :: L = 10.d00, rc = 5.d00, V = L * L * L
+    real (kind = double), parameter :: Li = 1/L, rc2 = rc * rc
     real (kind = double), parameter :: l_box = 2.d00
     real (kind = double), parameter :: E = -680.d00
 

@@ -20,7 +20,6 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
     real (kind = double) :: f_mod
     integer (kind = int) :: i, j
 
-
     potential = 0.d00
     fx = 0.d00
     fy = 0.d00

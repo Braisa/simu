@@ -20,6 +20,19 @@ program create_fcc
     integer (kind = int) :: random_seed = 1
     real (kind = double) :: random
 
+    character(len = 25) :: data_file, rva_file
+    character(len = 3) :: stat
+    integer (kind = int) :: io
+    logical :: exists
+
+    ! Ask for filenames
+
+    print *, "Data filename?"
+    read (*, *) data_file
+
+    print *, "RVA filename?"
+    read (*, *) rva_file
+
     ! Place atoms in evenly spaced fcc
 
     N_placed = 0
@@ -60,11 +73,11 @@ program create_fcc
     
     end do
 
-    print *, 'Placed particles: ', N_placed
+    print *, "Placed particles: ", N_placed
 
     call lj_potential(rx, ry, rz, potential, fx, fy, fz)
 
-    print *, 'Evenly spaced fcc potential: ', potential
+    print *, "Evenly spaced fcc potential: ", potential
 
     ! Slightly shift particles around evenly spaced positions
     ! Also assign random velocities for each particle, and calculate the resulting kinetic energy
@@ -87,7 +100,7 @@ program create_fcc
 
     call lj_potential(rx, ry, rz, potential, fx, fy, fz)
 
-    print *, 'Uneven fcc potential: ', potential
+    print *, "Uneven fcc potential: ", potential
 
     ! Scale velocities so energy is as desired
 
@@ -104,8 +117,41 @@ program create_fcc
 
     end do
 
-    print *, 'Kinetic energy: ', kinetic
-    print *, 'Total energy: ', potential + kinetic
-    print *, 'Desired energy: ', E
+    print *, "Kinetic energy: ", kinetic
+    print *, "Total energy: ", potential + kinetic
+    print *, "Desired energy: ", E
+
+    ! Save data
+
+    inquire(file=data_file, exist=exists)
+    if (exists) then
+        stat = "old"
+    else
+        stat = "new"
+    end if
+
+    open(newunit=io, file=data_file, status=stat, action="write")
+
+    write(io, *) N, V, L, rc
+    write(io, *) potential + kinetic, potential, kinetic
+    write(io, *) data_file
+    write(io, *) rva_file
+
+    close(io)
+
+    ! Save RVA
+
+    inquire(file=rva_file, exist=exists)
+    if (exists) then
+        stat = "old"
+    else
+        stat = "new"
+    end if
+
+    open(newunit=io, file=rva_file, status=stat, action="write", form="unformatted")
+
+    write(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+
+    close(io)
 
 end program create_fcc
