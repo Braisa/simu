@@ -11,6 +11,7 @@ program create_fcc
     integer (kind = int) :: i
 
     real (kind = double) :: potential, kinetic
+    real (kind = double) :: position_shift = 0.2d00
     real (kind = double) :: vel_scale
     real (kind = double), dimension(N) :: fx, fy, fz
 
@@ -77,26 +78,35 @@ program create_fcc
 
     call lj_potential(rx, ry, rz, potential, fx, fy, fz)
 
+    print *, N, V, rc, correction_factor, energy_correction
     print *, "Evenly spaced fcc potential: ", potential
 
     ! Slightly shift particles around evenly spaced positions
-    ! Also assign random velocities for each particle, and calculate the resulting kinetic energy
-
-    kinetic = 0.d00
 
     do i = 1, N
 
-        rx(i) = rx(i) + (2.d00 * random(random_seed) - 1.d00) * 0.1d00 * l_box
-        ry(i) = ry(i) + (2.d00 * random(random_seed) - 1.d00) * 0.1d00 * l_box
-        rz(i) = rz(i) + (2.d00 * random(random_seed) - 1.d00) * 0.1d00 * l_box
+        rx(i) = rx(i) + (2.d00 * random(random_seed) - 1.d00) * position_shift * half_l_box
+        ry(i) = ry(i) + (2.d00 * random(random_seed) - 1.d00) * position_shift * half_l_box
+        rz(i) = rz(i) + (2.d00 * random(random_seed) - 1.d00) * position_shift * half_l_box
+    
+    end do
+
+    ! Assign random velocities for each particle, and calculate the resulting kinetic energy
+    ! Ensure total momentum is zero by manually assigning the last particle's velocity
+
+    do i = 1, N-1
 
         vx(i) = 2.d00 * random(random_seed) - 1.d00
         vy(i) = 2.d00 * random(random_seed) - 1.d00
         vz(i) = 2.d00 * random(random_seed) - 1.d00
 
-        kinetic = kinetic + 0.5d00 * (vx(i) * vx(i) + vy(i) * vy(i) + vz(i) * vz(i))
-    
     end do
+
+    vx(N) = -sum(vx)
+    vy(N) = -sum(vy)
+    vz(N) = -sum(vz)
+
+    kinetic = 0.5d00 * (sum(vx*vx) + sum(vy*vy) + sum(vz*vz))
 
     call lj_potential(rx, ry, rz, potential, fx, fy, fz)
 
@@ -116,7 +126,8 @@ program create_fcc
         kinetic = kinetic + 0.5d00 * (vx(i) * vx(i) + vy(i) * vy(i) + vz(i) * vz(i))
 
     end do
-
+    
+    print *, sum(vx), sum(vy), sum(vz)
     print *, "Kinetic energy: ", kinetic
     print *, "Total energy: ", potential + kinetic
     print *, "Desired energy: ", E
@@ -132,7 +143,8 @@ program create_fcc
 
     open(newunit=io, file=data_file, status=stat, action="write")
 
-    write(io, *) N, V, L, rc
+    write(io, *) N, L, Li, rc, rc2
+    write(io, *) V, D
     write(io, *) potential + kinetic, potential, kinetic
     write(io, *) data_file
     write(io, *) rva_file
