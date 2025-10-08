@@ -119,6 +119,11 @@ program create_fcc
         rz(i) = rz(i) + (2.d00 * random(random_seed) - 1.d00) * position_shift * half_l_box
     
     end do
+    
+    call lj_potential(rx, ry, rz, potential, fx, fy, fz)
+    potential = potential + energy_correction
+
+    print *, "Uneven fcc potential: ", potential
 
     ! Assign random velocities for each particle, and calculate the resulting kinetic energy
     ! Ensure total momentum is zero by adjusting each particle's velocity
@@ -145,11 +150,6 @@ program create_fcc
 
     kinetic = 0.5d00 * (sum(vx*vx) + sum(vy*vy) + sum(vz*vz))
 
-    call lj_potential(rx, ry, rz, potential, fx, fy, fz)
-    potential = potential + energy_correction
-
-    print *, "Uneven fcc potential: ", potential
-
     ! Scale velocities so energy is as desired
 
     vel_scale = dsqrt((E - potential) / kinetic)
@@ -165,7 +165,7 @@ program create_fcc
 
     end do
     
-    print *, sum(vx), sum(vy), sum(vz)
+    print *, "Total momentum: ", sum(vx), sum(vy), sum(vz)
     print *, "Kinetic energy: ", kinetic
     print *, "Total energy: ", potential + kinetic
     print *, "Desired energy: ", E
