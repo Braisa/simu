@@ -37,6 +37,8 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
             ry_ij = ry_i - ry(j)
             rz_ij = rz_i - rz(j)
 
+            ! Calculate distance with respect to closest image
+
             rx_ij = rx_ij - L * dnint(rx_ij * Li)
             ry_ij = ry_ij - L * dnint(ry_ij * Li)
             rz_ij = rz_ij - L * dnint(rz_ij * Li)
