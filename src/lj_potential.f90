@@ -64,7 +64,7 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
     
     end do
 
-    potential = 4.d00 * potential + energy_correction
+    potential = 4.d00 * potential
     fx = 24.d00 * fx
     fy = 24.d00 * fy
     fz = 24.d00 * fz

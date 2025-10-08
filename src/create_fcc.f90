@@ -5,26 +5,49 @@ program create_fcc
 
     implicit none
 
+    ! fcc variables
+
     integer (kind = int) :: N_placed, kx, ky, kz
     real (kind = double) :: kx_box, ky_box, kz_box
     real (kind = double) :: half_l_box = l_box * 0.5d00
     integer (kind = int) :: i
+    real (kind = double) :: position_shift = 0.2d00
+
+    ! Energy and particle variables
 
     real (kind = double) :: potential, kinetic
-    real (kind = double) :: position_shift = 0.2d00
     real (kind = double) :: vel_scale
-    real (kind = double), dimension(N) :: fx, fy, fz
-
     real (kind = double), dimension(N) :: rx, ry, rz
     real (kind = double), dimension(N) :: vx, vy, vz
+    real (kind = double), dimension(N) :: fx, fy, fz
+
+    ! RNG variables
 
     integer (kind = int) :: random_seed = 1
     real (kind = double) :: random
+
+    ! I/O variables
 
     character(len = 25) :: data_file, rva_file
     character(len = 3) :: stat
     integer (kind = int) :: io
     logical :: exists
+
+    ! Correction variables
+
+    real (kind = double) :: correction_factor
+    real (kind = double) :: trc6
+    real (kind = double) :: energy_correction
+    real (kind = double) :: rpot_correction
+    real (kind = double) :: r2pot_correction
+
+    ! Compute corrections
+
+    correction_factor = PI*dble(N)*dble(N)/(V*rc*rc2)
+    trc6 = 3.d00*rc2*rc2*rc2
+    energy_correction = 8.d00/3.d00 * correction_factor * (1.d00/trc6 - 1.d00)
+    rpot_correction = 16.d00 * correction_factor * (1.d00 - 2.d00/trc6)
+    r2pot_correction = 16.d00 * correction_factor * (26.d00/trc6 - 7.d00)
 
     ! Ask for filenames
 
@@ -77,6 +100,7 @@ program create_fcc
     print *, "Placed particles: ", N_placed
 
     call lj_potential(rx, ry, rz, potential, fx, fy, fz)
+    potential = potential + energy_correction
 
     print *, N, V, rc, correction_factor, energy_correction
     print *, "Evenly spaced fcc potential: ", potential
@@ -109,6 +133,7 @@ program create_fcc
     kinetic = 0.5d00 * (sum(vx*vx) + sum(vy*vy) + sum(vz*vz))
 
     call lj_potential(rx, ry, rz, potential, fx, fy, fz)
+    potential = potential + energy_correction
 
     print *, "Uneven fcc potential: ", potential
 
