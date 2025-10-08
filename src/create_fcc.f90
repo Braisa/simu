@@ -33,6 +33,10 @@ program create_fcc
     character(len = 3) :: stat
     integer (kind = int) :: io
     logical :: exists
+    9000 format (a25)
+    9001 format (3(1pe13.6))
+    9002 format (i8, 2(1pe13.6))
+    9003 format (4(1pe13.6))
 
     ! Correction variables
 
@@ -177,11 +181,11 @@ program create_fcc
 
     open(newunit=io, file=data_file, status=stat, action="write")
 
-    write(io, *) N, L, Li, rc, rc2
-    write(io, *) V, D
-    write(io, *) potential + kinetic, potential, kinetic
-    write(io, *) data_file
-    write(io, *) rva_file
+    write(io, 9003) L, Li, rc, rc2
+    write(io, 9002) N, V, D
+    write(io, 9001) potential + kinetic, potential, kinetic
+    write(io, 9000) data_file
+    write(io, 9000) rva_file
 
     close(io)
 
