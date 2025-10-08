@@ -20,6 +20,7 @@ program create_fcc
     real (kind = double), dimension(N) :: rx, ry, rz
     real (kind = double), dimension(N) :: vx, vy, vz
     real (kind = double), dimension(N) :: fx, fy, fz
+    real (kind = double) :: px, py, pz
 
     ! RNG variables
 
@@ -116,9 +117,9 @@ program create_fcc
     end do
 
     ! Assign random velocities for each particle, and calculate the resulting kinetic energy
-    ! Ensure total momentum is zero by manually assigning the last particle's velocity
+    ! Ensure total momentum is zero by adjusting each particle's velocity
 
-    do i = 1, N-1
+    do i = 1, N
 
         vx(i) = 2.d00 * random(random_seed) - 1.d00
         vy(i) = 2.d00 * random(random_seed) - 1.d00
@@ -126,9 +127,17 @@ program create_fcc
 
     end do
 
-    vx(N) = -sum(vx)
-    vy(N) = -sum(vy)
-    vz(N) = -sum(vz)
+    px = sum(vx)/N
+    py = sum(vy)/N
+    pz = sum(vz)/N
+
+    do i = 1, N
+
+        vx(i) = vx(i) - px
+        vy(i) = vy(i) - py
+        vz(i) = vz(i) - pz
+
+    end do
 
     kinetic = 0.5d00 * (sum(vx*vx) + sum(vy*vy) + sum(vz*vz))
 
