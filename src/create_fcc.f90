@@ -166,6 +166,7 @@ program create_fcc
     end do
     
     print *, "Total momentum: ", sum(vx), sum(vy), sum(vz)
+    print *, "Total forces: ", sum(fx), sum(fy), sum(fz)
     print *, "Kinetic energy: ", kinetic
     print *, "Total energy: ", potential + kinetic
     print *, "Desired energy: ", E
