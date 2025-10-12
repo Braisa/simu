@@ -2,6 +2,7 @@ program create_fcc
 
     use get_kinds
     use fcc_parameters
+    use interfaces
 
     implicit none
 
