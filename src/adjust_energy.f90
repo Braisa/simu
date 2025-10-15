@@ -18,6 +18,7 @@ program adjust_energy
 
     character(len = 25) :: data_file, rva_file
     integer (kind = int) :: io
+    logical :: exists
     9000 format (a25)
     9001 format (3(1pe13.6))
     9002 format (i8, 2(1pe13.6))
@@ -43,6 +44,14 @@ program adjust_energy
 
     print *, "Data filename?"
     read (*, *) data_file
+
+    ! Check if file exists
+
+    inquire(file=data_file, exist=exists)
+    if (.NOT. exists) then
+        print *, "File does not exist."
+        stop
+    end if
 
     ! Read files
 
