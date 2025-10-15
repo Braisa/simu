@@ -86,7 +86,6 @@ program adjust_energy
     ! Scale velocities so energy is as desired
 
     vel_scale = dsqrt((E - potential) / kinetic)
-    kinetic = 0.d00
 
     vx = vx * vel_scale
     vy = vy * vel_scale

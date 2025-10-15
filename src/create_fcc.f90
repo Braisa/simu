@@ -141,30 +141,21 @@ program create_fcc
     py = sum(vy)/N
     pz = sum(vz)/N
 
-    do i = 1, N
-
-        vx(i) = vx(i) - px
-        vy(i) = vy(i) - py
-        vz(i) = vz(i) - pz
-
-    end do
+    vx = vx - px
+    vy = vy - py
+    vz = vz - pz
 
     kinetic = 0.5d00 * (sum(vx*vx) + sum(vy*vy) + sum(vz*vz))
 
     ! Scale velocities so energy is as desired
 
     vel_scale = dsqrt((E - potential) / kinetic)
-    kinetic = 0.d00
 
-    do i = 1, N
-        
-        vx(i) = vx(i) * vel_scale
-        vy(i) = vy(i) * vel_scale
-        vz(i) = vz(i) * vel_scale
+    vx = vx * vel_scale
+    vy = vy * vel_scale
+    vz = vz * vel_scale
 
-        kinetic = kinetic + 0.5d00 * (vx(i) * vx(i) + vy(i) * vy(i) + vz(i) * vz(i))
-
-    end do
+    kinetic = 0.5d00 * (sum(vx*vx) + sum(vy*vy) + sum(vz*vz))
     
     print *, "Total momentum: ", sum(vx), sum(vy), sum(vz)
     print *, "Total forces: ", sum(fx), sum(fy), sum(fz)
