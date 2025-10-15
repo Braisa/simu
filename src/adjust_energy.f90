@@ -65,9 +65,9 @@ program adjust_energy
 
     close(io)
 
-        open(newunit=io, file=rva_file, status="old", action="read", form="unformatted")
+    open(newunit=io, file=rva_file, status="old", action="read", form="unformatted")
 
-    read(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+        read(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
 
     close(io)
 
