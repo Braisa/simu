@@ -174,11 +174,11 @@ program create_fcc
 
     open(newunit=io, file=data_file, status=stat, action="write")
 
-    write(io, 9003) L, Li, rc, rc2
-    write(io, 9002) N, V, D
-    write(io, 9001) potential + kinetic, potential, kinetic
-    write(io, 9000) data_file
-    write(io, 9000) rva_file
+        write(io, 9003) L, Li, rc, rc2
+        write(io, 9002) N, V, D
+        write(io, 9001) potential + kinetic, potential, kinetic
+        write(io, 9000) data_file
+        write(io, 9000) rva_file
 
     close(io)
 
@@ -193,7 +193,7 @@ program create_fcc
 
     open(newunit=io, file=rva_file, status=stat, action="write", form="unformatted")
 
-    write(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+        write(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
 
     close(io)
 

@@ -57,15 +57,15 @@ program adjust_energy
 
     open(newunit=io, file=data_file, status="old", action="read")
 
-    read(io, 9003) 
-    read(io, 9002) 
-    read(io, 9001) energy, potential, kinetic
-    read(io, 9000) data_file
-    read(io, 9000) rva_file
+        read(io, 9003) 
+        read(io, 9002) 
+        read(io, 9001) energy, potential, kinetic
+        read(io, 9000) data_file
+        read(io, 9000) rva_file
 
     close(io)
 
-    open(newunit=io, file=rva_file, status="old", action="read", form="unformatted")
+        open(newunit=io, file=rva_file, status="old", action="read", form="unformatted")
 
     read(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
 
@@ -97,5 +97,23 @@ program adjust_energy
     print *, "Kinetic energy: ", kinetic
     print *, "Total energy: ", potential + kinetic
     print *, "Desired energy: ", E
+
+    ! Save data
+
+    open(newunit=io, file=data_file, status="old", action="readwrite")
+
+        read(io, 9003)
+        read(io, 9002)
+        write(io, 9001) potential + kinetic, potential, kinetic
+        write(io, 9000) data_file
+        write(io, 9000) rva_file
+
+    close(io)
+
+    open(newunit=io, file=rva_file, status="old", action="write", form="unformatted")
+
+        write(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+
+    close(io)
     
 end program adjust_energy
