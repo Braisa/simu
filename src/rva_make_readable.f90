@@ -17,7 +17,7 @@ program rva_make_readable
     character (len = 3) :: stat
     integer (kind = int) :: io
     logical :: exists
-    8000 format (9(a1, 1x))
+    8000 format (9(a2, 1x))
     8001 format (9(1pe13.6, 1x))
 
     ! Auxiliary
