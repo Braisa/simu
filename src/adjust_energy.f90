@@ -71,6 +71,11 @@ program adjust_energy
 
     close(io)
 
+    ! Ask for initial state energy
+
+    print *, "Initial energy?"
+    read (*, *) energy
+
     ! Ensure total momentum is still zero
 
     px = sum(vx)/N

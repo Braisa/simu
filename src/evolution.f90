@@ -15,7 +15,7 @@ program evolution
 
     ! Evolution variables
 
-    integer (kind = int) :: s, steps = 5000
+    integer (kind = int) :: s, steps
     integer (kind = int) :: logging_interval = 100
 
     ! I/O variables
@@ -90,6 +90,11 @@ program evolution
 
     save_rva_file = TRIM(save_file) // ".bin"
     save_log_file = TRIM(save_file) // ".txt"
+
+    ! Ask for step number
+
+    print *, "Number of steps?"
+    read (*, *) steps
 
     ! Log during evolution
 
