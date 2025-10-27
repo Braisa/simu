@@ -117,7 +117,7 @@ program evolution
 
             potential = potential + energy_correction
             energy = potential + kinetic
-
+            
             if (MOD(s, logging_interval) == 0) then
 
                 write(io, 7001) energy
@@ -129,6 +129,16 @@ program evolution
     close (io)
 
     ! Save data
+
+    open (newunit=io, file=data_file, status="old", action="readwrite")
+
+        read(io, 9003)
+        read(io, 9002)
+        write(io, 9001) energy, potential, kinetic
+        write(io, 9000) data_file
+        write(io, 9000) save_rva_file
+
+    close (io)
 
     inquire (file=save_rva_file, exist=exists)
     if (exists) then

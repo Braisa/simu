@@ -16,9 +16,10 @@ program adjust_energy
 
     ! I/O variables
 
-    character(len = 25) :: data_file, rva_file
+    character(len = 25) :: data_file, rva_file, save_rva_file
     integer (kind = int) :: io
     logical :: exists
+    character (len = 3) :: stat
     9000 format (a25)
     9001 format (3(1pe13.6))
     9002 format (i8, 2(1pe13.6))
@@ -65,11 +66,24 @@ program adjust_energy
 
     close(io)
 
+    ! Check if file exists
+
+    inquire(file=data_file, exist=exists)
+    if (.NOT. exists) then
+        print *, "File does not exist."
+        stop
+    end if
+
     open(newunit=io, file=rva_file, status="old", action="read", form="unformatted")
 
         read(io) rx, ry, rz, vx, vy, vz, ax, ay, az
 
     close(io)
+
+    ! Ask for save file name
+
+    print *, "Save RVA filename?"
+    read (*, *) save_rva_file
 
     ! Ask for initial state energy
 
@@ -111,11 +125,18 @@ program adjust_energy
         read(io, 9002)
         write(io, 9001) potential + kinetic, potential, kinetic
         write(io, 9000) data_file
-        write(io, 9000) rva_file
+        write(io, 9000) save_rva_file
 
     close(io)
 
-    open(newunit=io, file=rva_file, status="old", action="write", form="unformatted")
+    inquire (file=save_rva_file, exist=exists)
+    if (exists) then
+        stat = "old"
+    else
+        stat = "new"
+    end if
+
+    open(newunit=io, file=save_rva_file, status=stat, action="write", form="unformatted")
 
         write(io) rx, ry, rz, vx, vy, vz, ax, ay, az
 

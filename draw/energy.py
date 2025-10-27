@@ -6,21 +6,25 @@ import os
 path = os.path.dirname(__file__) + "/"
 
 E = -680
+logging_interval = 100
 
-energy = pd.read_csv(path + "energy.txt", sep=" ")["E"]
+name = input("Name? ")
+
+energy = pd.read_csv(path + name + ".txt", sep=" ")["E"]
 
 fig, ax = plt.subplots()
 
-steps = 1 + np.arange(len(energy))
+steps = logging_interval * len(energy)
+steps_lin = logging_interval * (1 + np.arange(len(energy)))
 
-ax.plot(steps, energy, ls = "solid", color = "tab:blue")
-ax.plot(steps, np.mean(energy) * np.ones_like(steps), ls = "dashed", color = "tab:orange", label="All steps mean")
-ax.plot(steps, np.mean(energy[20:]) * np.ones_like(steps), ls = "dashed", color = "tab:purple", label="Last steps mean")
+ax.plot(steps_lin, energy, ls = "solid", color = "tab:blue")
+ax.plot(steps_lin, np.mean(energy) * np.ones_like(steps_lin), ls = "dashed", color = "tab:orange", label="All steps mean")
+ax.plot(steps_lin, np.mean(energy[20:]) * np.ones_like(steps_lin), ls = "dashed", color = "tab:purple", label="Last steps mean")
 
-ax.set_xlim(left=np.min(steps), right=np.max(steps))
+ax.set_xlim(left=np.min(steps_lin), right=np.max(steps_lin))
 
-ax.xaxis.set_major_locator(plt.MultipleLocator(10))
-ax.xaxis.set_minor_locator(plt.MultipleLocator(2))
+ax.xaxis.set_major_locator(plt.MultipleLocator(steps//5))
+ax.xaxis.set_minor_locator(plt.MultipleLocator(steps//20))
 ax.yaxis.set_major_locator(plt.MultipleLocator(.02))
 ax.yaxis.set_minor_locator(plt.MultipleLocator(.01))
 
@@ -29,4 +33,4 @@ ax.set_ylabel("E")
 
 ax.legend(loc="best")
 
-fig.savefig(path + "energy.pdf", dpi=300, bbox_inches="tight")
+fig.savefig(path + name + ".pdf", dpi=300, bbox_inches="tight")
