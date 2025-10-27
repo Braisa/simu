@@ -25,7 +25,7 @@ program create_fcc
 
     ! RNG variables
 
-    integer (kind = int) :: random_seed = 1
+    integer (kind = int) :: random_seed = 3
     real (kind = double) :: random
 
     ! I/O variables
