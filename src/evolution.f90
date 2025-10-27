@@ -11,7 +11,7 @@ program evolution
     real (kind = double) :: potential, kinetic, energy
     real (kind = double), dimension(N) :: rx, ry, rz
     real (kind = double), dimension(N) :: vx, vy, vz
-    real (kind = double), dimension(N) :: fx, fy, fz
+    real (kind = double), dimension(N) :: ax, ay, az
 
     ! Evolution variables
 
@@ -79,7 +79,7 @@ program evolution
 
     open (newunit=io, file=rva_file, status="old", action="read", form="unformatted")
 
-        read(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+        read(io) rx, ry, rz, vx, vy, vz, ax, ay, az
 
     close(io)
 
@@ -108,7 +108,7 @@ program evolution
 
         do s = 1, steps
             
-            call lj_verlet(rx, ry, rz, vx, vy, vz, fx, fy, fz, potential, kinetic)
+            call lj_verlet(rx, ry, rz, vx, vy, vz, ax, ay, az, potential, kinetic)
 
             potential = potential + energy_correction
             energy = potential + kinetic
@@ -134,7 +134,7 @@ program evolution
 
     open (newunit=io, file=save_rva_file, status=stat, action="write", form="unformatted")
 
-        write(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+        write(io) rx, ry, rz, vx, vy, vz, ax, ay, az
     
     close(io)
 

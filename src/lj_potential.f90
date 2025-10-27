@@ -1,4 +1,4 @@
-subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
+subroutine lj_potential(rx, ry, rz, potential, ax, ay, az)
 
     use get_kinds
     use fcc_parameters
@@ -9,7 +9,7 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
 
     real (kind = double), dimension(N), intent(IN) :: rx, ry, rz
     real (kind = double), intent(OUT) :: potential
-    real (kind = double), dimension(N), intent(OUT) :: fx, fy, fz
+    real (kind = double), dimension(N), intent(OUT) :: ax, ay, az
 
     ! Auxiliary variables
 
@@ -21,9 +21,9 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
     integer (kind = int) :: i, j
 
     potential = 0.d00
-    fx = 0.d00
-    fy = 0.d00
-    fz = 0.d00
+    ax = 0.d00
+    ay = 0.d00
+    az = 0.d00
 
     do i = 1, N-1
 
@@ -53,12 +53,12 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
 
                 potential = potential + r12i_ij - r6i_ij
                 f_mod = (2.d00 * r12i_ij - r6i_ij) * r2i_ij
-                fx(i) = fx(i) + f_mod * rx_ij
-                fx(j) = fx(j) - f_mod * rx_ij
-                fy(i) = fy(i) + f_mod * ry_ij
-                fy(j) = fy(j) - f_mod * ry_ij
-                fz(i) = fz(i) + f_mod * rz_ij
-                fz(j) = fz(j) - f_mod * rz_ij
+                ax(i) = ax(i) + f_mod * rx_ij
+                ax(j) = ax(j) - f_mod * rx_ij
+                ay(i) = ay(i) + f_mod * ry_ij
+                ay(j) = ay(j) - f_mod * ry_ij
+                az(i) = az(i) + f_mod * rz_ij
+                az(j) = az(j) - f_mod * rz_ij
 
             end if
         
@@ -67,8 +67,8 @@ subroutine lj_potential(rx, ry, rz, potential, fx, fy, fz)
     end do
 
     potential = 4.d00 * potential
-    fx = 24.d00 * fx
-    fy = 24.d00 * fy
-    fz = 24.d00 * fz
+    ax = 24.d00 * ax
+    ay = 24.d00 * ay
+    az = 24.d00 * az
 
 end subroutine lj_potential

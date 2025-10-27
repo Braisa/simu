@@ -11,7 +11,7 @@ program adjust_energy
     real (kind = double) :: vel_scale
     real (kind = double), dimension(N) :: rx, ry, rz
     real (kind = double), dimension(N) :: vx, vy, vz
-    real (kind = double), dimension(N) :: fx, fy, fz
+    real (kind = double), dimension(N) :: ax, ay, az
     real (kind = double) :: px, py, pz
 
     ! I/O variables
@@ -67,7 +67,7 @@ program adjust_energy
 
     open(newunit=io, file=rva_file, status="old", action="read", form="unformatted")
 
-        read(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+        read(io) rx, ry, rz, vx, vy, vz, ax, ay, az
 
     close(io)
 
@@ -112,7 +112,7 @@ program adjust_energy
 
     open(newunit=io, file=rva_file, status="old", action="write", form="unformatted")
 
-        write(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+        write(io) rx, ry, rz, vx, vy, vz, ax, ay, az
 
     close(io)
     

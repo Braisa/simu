@@ -20,7 +20,7 @@ program create_fcc
     real (kind = double) :: vel_scale
     real (kind = double), dimension(N) :: rx, ry, rz
     real (kind = double), dimension(N) :: vx, vy, vz
-    real (kind = double), dimension(N) :: fx, fy, fz
+    real (kind = double), dimension(N) :: ax, ay, az
     real (kind = double) :: px, py, pz
 
     ! RNG variables
@@ -105,7 +105,7 @@ program create_fcc
 
     print *, "Placed particles: ", N_placed
 
-    call lj_potential(rx, ry, rz, potential, fx, fy, fz)
+    call lj_potential(rx, ry, rz, potential, ax, ay, az)
     potential = potential + energy_correction
 
     print *, N, V, rc, correction_factor, energy_correction
@@ -121,7 +121,7 @@ program create_fcc
     
     end do
     
-    call lj_potential(rx, ry, rz, potential, fx, fy, fz)
+    call lj_potential(rx, ry, rz, potential, ax, ay, az)
     potential = potential + energy_correction
 
     print *, "Uneven fcc potential: ", potential
@@ -158,7 +158,7 @@ program create_fcc
     kinetic = 0.5d00 * (sum(vx*vx) + sum(vy*vy) + sum(vz*vz))
     
     print *, "Total momentum: ", sum(vx), sum(vy), sum(vz)
-    print *, "Total forces: ", sum(fx), sum(fy), sum(fz)
+    print *, "Total forces: ", sum(ax), sum(ay), sum(az)
     print *, "Kinetic energy: ", kinetic
     print *, "Total energy: ", potential + kinetic
     print *, "Desired energy: ", E
@@ -193,7 +193,7 @@ program create_fcc
 
     open(newunit=io, file=rva_file, status=stat, action="write", form="unformatted")
 
-        write(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+        write(io) rx, ry, rz, vx, vy, vz, ax, ay, az
 
     close(io)
 

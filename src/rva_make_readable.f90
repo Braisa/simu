@@ -9,7 +9,7 @@ program rva_make_readable
 
     real (kind = double), dimension(N) :: rx, ry, rz
     real (kind = double), dimension(N) :: vx, vy, vz
-    real (kind = double), dimension(N) :: fx, fy, fz
+    real (kind = double), dimension(N) :: ax, ay, az
 
     ! I/O variables
 
@@ -37,7 +37,7 @@ program rva_make_readable
 
     open (newunit=io, file=rva_file, status="old", action="read", form="unformatted")
 
-        read(io) rx, ry, rz, vx, vy, vz, fx, fy, fz
+        read(io) rx, ry, rz, vx, vy, vz, ax, ay, az
 
     close(io)
 
@@ -57,7 +57,7 @@ program rva_make_readable
 
         write(io, 8000) "rx", "ry", "rz", "vx", "vy", "vz", "ax", "ay", "az"
         do i = 1, N
-            write(io, 8001) rx(i), ry(i), rz(i), vx(i), vy(i), vz(i), fx(i), fy(i), fz(i)
+            write(io, 8001) rx(i), ry(i), rz(i), vx(i), vy(i), vz(i), ax(i), ay(i), az(i)
         end do
 
     close(io)
