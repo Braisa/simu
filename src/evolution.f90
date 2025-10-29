@@ -29,8 +29,8 @@ program evolution
     9001 format (3(1pe13.6))
     9002 format (i8, 2(1pe13.6))
     9003 format (4(1pe13.6))
-    7000 format (a1)
-    7001 format (1pe13.6)
+    7000 format (3(a1, 1x))
+    7001 format (3(SP, 1pe13.6, 1x))
 
     ! Correction variables
 
@@ -107,7 +107,7 @@ program evolution
 
     open (newunit=io, file=save_log_file, status=stat, action="write")
 
-        write(io, 7000) "E"
+        write(io, 7000) "E", "V", "T"
 
         ! Execute evolution steps
 
@@ -120,7 +120,7 @@ program evolution
             
             if (MOD(s, logging_interval) == 0) then
 
-                write(io, 7001) energy
+                write(io, 7001) energy, potential, kinetic
             
             end if
 
