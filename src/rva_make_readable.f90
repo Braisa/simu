@@ -18,7 +18,7 @@ program rva_make_readable
     integer (kind = int) :: io
     logical :: exists
     8000 format (9(a2, 1x))
-    8001 format (9(1pe13.6, 1x))
+    8001 format (9(SP, 1pe13.6, 1x))
 
     ! Auxiliary
 
