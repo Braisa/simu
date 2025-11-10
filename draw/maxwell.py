@@ -17,7 +17,10 @@ colors = ("red", "green", "blue", "orange")
 for (name, xlabel, ylabel, color) in zip(names, xlabels, ylabels, colors):
     fig, ax = plt.subplots()
 
-    plt.hist(rva[name], bins=50, histtype="step", color=f"tab:{color}")
+    ax.hist(rva[name], bins=100, histtype="step", color=f"tab:{color}")
+    #counts, bins = np.histogram(rva[name], 100)
+    #bins_c = (bins[:-1] + bins[1:]) / 2
+    #ax.plot(bins_c, counts, "o", color=f"tab:{color}")
     
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
