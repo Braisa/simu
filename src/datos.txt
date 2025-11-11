@@ -2,4 +2,4 @@
      500 1.000000E+03 5.000000E-01
 -6.800245E+02-1.678605E+03 9.985810E+02
 datos.txt                
-big_evo.bin              
+equilibration.bin               

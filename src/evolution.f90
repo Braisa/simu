@@ -20,10 +20,10 @@ program evolution
 
     ! I/O variables
 
-    character (len = 25) :: data_file, rva_file, save_rva_file, save_log_file
+    character (len = 25) :: data_file, rva_file, save_rva_file, energy_log_file, rva_log_file
     character (len = 21) :: save_file
     character (len = 3) :: stat
-    integer (kind = int) :: io
+    integer (kind = int) :: io, jo
     logical :: exists
     9000 format (a25)
     9001 format (3(1pe13.6))
@@ -89,7 +89,8 @@ program evolution
     read (*, *) save_file
 
     save_rva_file = TRIM(save_file) // ".bin"
-    save_log_file = TRIM(save_file) // ".txt"
+    energy_log_file = TRIM(save_file) // "_log.txt"
+    rva_log_file = TRIM(save_file) // "_log.bin"
 
     ! Ask for step number
 
@@ -98,16 +99,28 @@ program evolution
 
     ! Log during evolution
 
-    inquire (file=save_log_file, exist=exists)
+    inquire (file=energy_log_file, exist=exists)
     if (exists) then
         stat = "old"
     else
         stat = "new"
     end if
 
-    open (newunit=io, file=save_log_file, status=stat, action="write")
-
+    open (newunit=io, file=energy_log_file, status=stat, action="write")
+    
         write(io, 7000) "E", "V", "T"
+
+    inquire (file=rva_log_file, exist=exists)
+    if (exists) then
+        stat = "old"
+    else
+        stat = "new"
+    end if
+
+    open (newunit=jo, file=rva_log_file, status=stat, action="write", form="unformatted")
+        
+        write(jo) steps / logging_interval
+        print *, steps/logging_interval
 
         ! Execute evolution steps
 
@@ -119,8 +132,10 @@ program evolution
             energy = potential + kinetic
             
             if (MOD(s, logging_interval) == 0) then
-
+                
+                print *, "Progress: ", s, "/", steps
                 write(io, 7001) energy, potential, kinetic
+                write(jo) rx, ry, rz, vx, vy, vz, ax, ay, az
             
             end if
 
