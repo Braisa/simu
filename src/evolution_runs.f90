@@ -180,7 +180,8 @@ program evolution_runs
                 dphi_kininv_accum(interval) = dphi * kinetic_inv
                 dphi2_kininv_accum(interval) = dphi * dphi * kinetic_inv
 
-                print *, "Progress: Run", r, "/", runs, "|", "Step", s, "/", steps
+                write (*, "(a13, i2, a1, i2, a1, a4, i6, a1, i6, a2)", advance="no") &
+                      "Progress: Run", r, "/", runs, "|", "Step", s, "/", steps, CHAR(13)
             
             end if
 
