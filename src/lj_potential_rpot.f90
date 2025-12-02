@@ -64,8 +64,8 @@ subroutine lj_potential_rpot(rx, ry, rz, potential, ax, ay, az, rpot, r2pot)
                 az(i) = az(i) + f_mod * rz_ij
                 az(j) = az(j) - f_mod * rz_ij
 
-                rpot = rpot - 12.d00 * r12i_ij + 6.d00 * r6i_ij
-                r2pot = r2pot + 156.d00 * r12i_ij - 42.d00 * r6i_ij
+                rpot = rpot - 2.d00 * r12i_ij + r6i_ij
+                r2pot = r2pot + 26.d00 * r12i_ij - 7.d00 * r6i_ij
 
             end if
         
@@ -77,5 +77,7 @@ subroutine lj_potential_rpot(rx, ry, rz, potential, ax, ay, az, rpot, r2pot)
     ax = 24.d00 * ax
     ay = 24.d00 * ay
     az = 24.d00 * az
+    rpot = 24.d00 * rpot
+    r2pot = 24.d00 * r2pot
 
 end subroutine lj_potential_rpot
