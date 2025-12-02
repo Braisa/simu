@@ -16,55 +16,65 @@ program evolution_runs
 
     ! Evolution variables
     
-    integer (kind = int) :: s, r, runs
-    integer (kind = int), parameter :: steps = 500000
-    integer (kind = int), parameter :: accum_interval = 100, intervals = steps / accum_interval
+    integer (kind = int) :: s, r
+    integer (kind = int), parameter :: steps = 500000, runs = 10, log_interval = 100
+    
+    ! Accumulating variables
 
-    ! Averaging variables
+    real (kind = double) :: energy_accum, potential_accum
+    real (kind = double) :: kinetic_accum, kinetic_inv_accum
+    real (kind = double) :: dphi_accum, d2phi_accum
+    real (kind = double) :: dphi_kininv_accum, dphi2_kininv_accum
 
-    integer (kind = int) :: interval
-
-    real (kind = double), dimension(intervals) :: kinetic_accum, kinetic_inv_accum
-    real (kind = double), dimension(intervals) :: dphi_accum, d2phi_accum
-    real (kind = double), dimension(intervals) :: dphi_kininv_accum, dphi2_kininv_accum
-
-    real (kind = double) :: kinetic_avg, kinetic_inv_avg
+    real (kind = double), dimension(runs) :: energy_avg, potential_avg, kinetic_avg
+    real (kind = double) :: kinetic_inv_avg
     real (kind = double) :: dphi_avg, d2phi_avg
     real (kind = double) :: dphi_kininv_avg, dphi2_kininv_avg
-
-    real (kind = double) :: kinetic_unc, kinetic_inv_unc
-    real (kind = double) :: dphi_unc, d2phi_unc
-    real (kind = double) :: dphi_kininv_unc, dphi2_kininv_unc
 
     ! Magnitude variables
 
     real (kind = int), parameter :: freedom = 3*N - 3
-    real (kind = double), parameter :: freedom_factor = freedom/2.d00 - 1.d00
-    real (kind = double) :: temperature, temperature_unc, &
-                            volume_heat_capacity, volume_heat_capacity_unc, &
-                            pressure, pressure_unc, &
-                            energy_expansion, energy_expansion_unc, &
-                            gamma, gamma_unc, &
-                            adiabatic_compressibility, adiabatic_compressibility_unc, &
-                            isothermal_compressibility, isothermal_compressibility_unc, &
+    real (kind = double), parameter :: freedom_factor_up = freedom/2.d00 - 1.d00
+    real (kind = double), parameter :: freedom_factor_down = 2.d00/freedom - 1.d00
+
+    real (kind = double), dimension(runs) :: temperature, pressure, volume_specific_heat, gammaG, &
+                                             adiabatic_compressibility, energy_expansion, alt_energy_expansion
+
+    ! Final magnitude variables
+
+    real (kind = double) :: energy_final, potential_final, kinetic_final, &
+                            temperature_final, pressure_final, volume_specific_heat_final, gammaG_final, &
+                            adiabatic_compressibility_final, energy_expansion_final, alt_energy_expansion_final
+
+    real (kind = double) :: energy_unc, potential_unc, kinetic_unc, &
+                            temperature_unc, pressure_unc, volume_specific_heat_unc, gammaG_unc, &
+                            adiabatic_compressibility_unc, energy_expansion_unc, alt_energy_expansion_unc
+
+    real (kind = double) :: isothermal_compressibility, isothermal_compressibility_unc, &
                             isobaric_expansion, isobaric_expansion_unc, &
                             adiabatic_expansion, adiabatic_expansion_unc, &
-                            pressure_heat_capacity, pressure_heat_capacity_unc
+                            pressure_specific_heat, pressure_specific_heat_unc
 
     ! I/O variables
 
-    character (len = 25) :: data_file, rva_file, save_rva_file, magnitude_log_file
-    character (len = 18) :: save_file
+    character (len = 25) :: data_file, rva_file, save_rva_file
+    character (len = 25) :: magnitude_log_file, final_log_file, run_log_file
+    character (len = 15) :: save_file
     character (len = 3) :: stat
-    integer (kind = int) :: io, jo
+    integer (kind = int) :: io, jo, ko
     character (len = 2) :: run_char
     logical :: exists
+
+    ! Data file formats
     9000 format (a25)
     9001 format (3(1pe13.6))
     9002 format (i8, 2(1pe13.6))
     9003 format (4(1pe13.6))
-    6000 format (21(a8, 1x))
-    6001 format (i8, 1x, 20(SP, 1pe13.6, 1x))
+    ! Magnitude log file formats
+    6000 format (11(a, 1x))
+    6001 format (i0.2, 1x, 10(SP, 1pe13.6, 1x))
+    ! Final log file formats
+    5000 format (2(a, 1x, 1pe13.6, 1x))
 
     ! Correction variables
 
@@ -124,14 +134,10 @@ program evolution_runs
     print *, "Save filename? (without extension, .bin will be added to RVA and .txt to log)"
     read (*, *) save_file
 
-    ! Ask for run number
-
-    print *, "Number of runs? (<100 to avoid formatting issues)"
-    read (*, *) runs
+    magnitude_log_file = TRIM(save_file) // "_mg.txt"
+    final_log_file = TRIM(save_file) // "_fin.txt"
 
     ! EVOLUTION RUNS
-
-    magnitude_log_file = TRIM(save_file) // "_mg.txt"
 
     inquire (file=magnitude_log_file, exist=exists)
     if (.NOT. exists) then
@@ -142,12 +148,35 @@ program evolution_runs
 
     open (newunit=io, file=magnitude_log_file, status=stat, action="write")
 
-    write(io, 6000) "RUN", "T", "s_T", "C_V", "s_C_V", "P", "s_P", "alphaE", "s_alphaE", "gamma", "s_gamma", &
-                    "kS", "s_kS", "kT", "s_kT", "alphaP", "s_alphaP", "alphaS", "s_alphaS", "C_P", "s_C_P"
+    write(io, 6000) "RUN", "E", "V", "K", "T", "P", "cV", "gammaG", "kS", "alphaE", "alt_alphaE"
 
     do r = 1, runs
 
+        write (run_char, "(i0.2)") r
+    
+        ! Set accumulators to zero
+
+        energy_accum = 0.d00
+        potential_accum = 0.d00
+        kinetic_accum = 0.d00
+        kinetic_inv_accum = 0.d00
+        dphi_accum = 0.d00
+        d2phi_accum = 0.d00
+        dphi_kininv_accum = 0.d00
+        dphi2_kininv_accum = 0.d00
+
         ! EVOLUTION STEPS FOR EACH RUN
+
+        run_log_file = TRIM(save_file) // "_rv" // run_char // ".bin"
+
+        inquire (file=run_log_file, exist=exists)
+        if (.NOT. exists) then
+            stat = "new"
+        else
+            stat = "old"
+        end if
+
+        open (newunit=ko, file=run_log_file, status=stat, action="write", form="unformatted")
 
         do s = 1, steps
         
@@ -162,127 +191,151 @@ program evolution_runs
             ! Compute magnitudes
 
             energy = potential + kinetic
+            kinetic_inv = 1/kinetic
+            dphi = Vi/3.d00 * rpot
+            d2phi = Vi*Vi/9.d00 * (r2pot - 2.d00 * rpot)
 
-            if (MOD(s, accum_interval) == 0) then
+            ! Accumulations
 
-                interval = s / accum_interval
+            energy_accum = energy_accum + energy
+            potential_accum = potential_accum + potential
+            kinetic_accum = kinetic_accum + kinetic
+            kinetic_inv_accum = kinetic_inv_accum + kinetic_inv
+            dphi_accum = dphi_accum + dphi
+            d2phi_accum = d2phi_accum + d2phi
+            dphi_kininv_accum = dphi_kininv_accum + dphi * kinetic_inv
+            dphi2_kininv_accum = dphi2_kininv_accum + dphi * dphi * kinetic_inv
 
-                kinetic_inv = 1/kinetic
-                dphi = Vi/3.d00 * rpot
-                d2phi = Vi*Vi/9.d00 * (r2pot - 2.d00 * rpot)
+            ! Check for logging
 
-                ! Accumulations
-                
-                kinetic_accum(interval) = kinetic
-                kinetic_inv_accum(interval) = kinetic_inv
-                dphi_accum(interval) = dphi
-                d2phi_accum(interval) = d2phi
-                dphi_kininv_accum(interval) = dphi * kinetic_inv
-                dphi2_kininv_accum(interval) = dphi * dphi * kinetic_inv
+            if (MOD(s, log_interval) == 0) then
+            
+                write(ko) energy, potential, kinetic, rx, ry, rz, vx, vy, vz
 
                 write (*, "(a13, i2, a1, i2, a1, a4, i6, a1, i6, a2)", advance="no") &
                       "Progress: Run", r, "/", runs, "|", "Step", s, "/", steps, CHAR(13)
-            
+
             end if
 
         end do
 
-        ! Compute averages and their uncertainties
+        close(ko)
 
-        kinetic_avg = SUM(kinetic_accum) / intervals
-        kinetic_inv_avg = SUM(kinetic_inv_accum) / intervals
-        dphi_avg = SUM(dphi_accum) / intervals
-        d2phi_avg = SUM(d2phi_accum) / intervals
-        dphi_kininv_avg = SUM(dphi_kininv_accum) / intervals
-        dphi2_kininv_avg = SUM(dphi2_kininv_accum) / intervals
-
-        kinetic_unc = DSQRT(SUM((kinetic_avg - kinetic_accum)**2) / intervals / (intervals - 1.d00))
-        kinetic_inv_unc = DSQRT(SUM((kinetic_inv_avg - kinetic_inv_accum)**2) / intervals / (intervals - 1.d00))
-        dphi_unc = DSQRT(SUM((dphi_avg - dphi_accum)**2) / intervals / (intervals - 1.d00))
-        d2phi_unc = DSQRT(SUM((d2phi_avg - d2phi_accum)**2) / intervals / (intervals - 1.d00))
-        dphi_kininv_unc = DSQRT(SUM((dphi_kininv_avg - dphi_kininv_accum)**2) / intervals / (intervals - 1.d00))
-        dphi2_kininv_unc = DSQRT(SUM((dphi2_kininv_avg - dphi2_kininv_accum)**2) / intervals / (intervals - 1.d00))
-
-        ! Compute direct magnitudes and their uncertainties
-
-        temperature = 2.d00 * kinetic_avg / freedom
-        temperature_unc = 2.d00 / freedom * kinetic_unc
-
-        volume_heat_capacity = 1.d00 / (1.d00 + freedom_factor * kinetic_avg * kinetic_inv_avg)
-        volume_heat_capacity_unc = volume_heat_capacity**2 * freedom_factor &
-                                   * DSQRT((kinetic_inv_avg*kinetic_unc)**2 + (kinetic_avg*kinetic_inv_unc)**2)
-
-        pressure = D * temperature - dphi_avg
-        pressure_unc = DSQRT(D**2 * temperature_unc**2 + dphi_unc**2)
-
-        energy_expansion = Vi / (dphi_avg - freedom_factor * kinetic_avg * dphi_kininv_avg)
-        energy_expansion_unc = energy_expansion**2 &
-                               * DSQRT(dphi_unc**2 + &
-                               freedom_factor**2*((dphi_kininv_avg*kinetic_unc)**2 + (kinetic_avg*dphi_kininv_unc)**2))
-
-        gamma = N / volume_heat_capacity + V * freedom_factor * (dphi_avg * kinetic_inv_avg - dphi_kininv_avg)
-        gamma_unc = DSQRT((N/volume_heat_capacity**2*volume_heat_capacity_unc)**2 &
-                    + (V*freedom_factor)**2*((kinetic_inv_avg*dphi_unc)**2 + (dphi_avg*kinetic_inv_unc)**2 + dphi_kininv_unc**2))
-
-        adiabatic_compressibility = D * temperature * (1.d00 + 2.d00 * gamma - N / volume_heat_capacity) + &
-                                    V * d2phi_avg - V * freedom_factor * (dphi2_kininv_avg &
-                                    - 2.d00 * dphi_avg * dphi_kininv_avg + dphi_avg * dphi_avg * kinetic_inv_avg)
-        adiabatic_compressibility_unc = DSQRT((D*(1.d00 + 2*gamma - N/volume_heat_capacity)*temperature_unc)**2 &
-                                        + (2.d00*D*temperature*gamma_unc)**2 + &
-                                        (N*D*temperature/volume_heat_capacity**2*volume_heat_capacity_unc)**2 + &
-                                        (V*d2phi_unc)**2 + (V*freedom_factor*dphi2_kininv_unc)**2 + &
-                                        (2.d00*V*freedom_factor*(dphi_kininv_avg-dphi_avg*kinetic_inv_avg)*dphi_unc)**2 + &
-                                        (2.d00*V*freedom_factor*dphi*dphi_kininv_unc)**2 + &
-                                        (V*freedom_factor*dphi**2*kinetic_inv_unc)**2)
-
-        adiabatic_compressibility = 1 / adiabatic_compressibility
-        adiabatic_compressibility_unc = adiabatic_compressibility**2 * adiabatic_compressibility_unc
-
-        ! Compute indirect magnitudes
-
-        isothermal_compressibility = 1 / adiabatic_compressibility - temperature * volume_heat_capacity * Vi * gamma * gamma
-        isothermal_compressibility_unc = DSQRT((adiabatic_compressibility_unc/adiabatic_compressibility**2)**2 + &
-                                         (temperature*volume_heat_capacity*Vi*gamma**2)**2 * ((temperature_unc/temperature)**2 + &
-                                         (volume_heat_capacity_unc/volume_heat_capacity)**2 + (2*gamma_unc/gamma)**2))
-
-        isothermal_compressibility = 1 / isothermal_compressibility
-        isothermal_compressibility_unc = isothermal_compressibility**2 * isothermal_compressibility_unc
+        ! Compute averages
         
-        isobaric_expansion = volume_heat_capacity * Vi * gamma * isothermal_compressibility
-        isobaric_expansion_unc = isobaric_expansion * DSQRT((volume_heat_capacity_unc/volume_heat_capacity)**2 + &
-                                 (gamma_unc/gamma)**2 + (isothermal_compressibility_unc/isothermal_compressibility)**2)
+        energy_avg(r) = energy_accum / DBLE(steps)
+        potential_avg(r) = potential_accum / DBLE(steps)
+        kinetic_avg(r) = kinetic_accum / DBLE(steps)
+        kinetic_inv_avg = kinetic_inv_accum / DBLE(steps)
+        dphi_avg = dphi_accum / DBLE(steps)
+        d2phi_avg = d2phi_accum / DBLE(steps)
+        dphi_kininv_avg = dphi_kininv_accum / DBLE(steps)
+        dphi2_kininv_avg = dphi2_kininv_accum / DBLE(steps)
 
-        adiabatic_expansion = -1.d00 / gamma / temperature
-        adiabatic_expansion_unc = adiabatic_expansion * DSQRT((gamma_unc/gamma)**2 + (temperature_unc/temperature)**2)
+        ! Compute direct magnitudes
 
-        pressure_heat_capacity = volume_heat_capacity * isothermal_compressibility / adiabatic_compressibility
-        pressure_heat_capacity_unc = pressure_heat_capacity * DSQRT((volume_heat_capacity_unc/volume_heat_capacity)**2 &
-                                     + (isothermal_compressibility_unc/isothermal_compressibility)**2 + &
-                                     (adiabatic_compressibility_unc/adiabatic_compressibility)**2)
+        temperature(r) = 2.d00/freedom * kinetic_avg(r)
+        pressure(r) = D * temperature(r) - dphi_avg
+        volume_specific_heat(r) = 1.d00 / (1.d00 + freedom_factor_down * kinetic_avg(r) * kinetic_inv_avg) / N
+        gammaG(r) = 1.d00 / volume_specific_heat(r) + V * freedom_factor_up * (dphi_avg * kinetic_inv_avg - dphi_kininv_avg)
+        adiabatic_compressibility(r) = D * temperature(r) * (1.d00 + 2.d00 * gammaG(r) - 1.d00 / volume_specific_heat(r)) + &
+                                       V * d2phi_avg - V * freedom_factor_up * (dphi2_kininv_avg &
+                                       - 2.d00 * dphi_avg * dphi_kininv_avg + dphi_avg * dphi_avg * kinetic_inv_avg)
+        adiabatic_compressibility(r) = 1.d00/adiabatic_compressibility(r)
+        energy_expansion(r) = -Vi / (dphi_avg + freedom_factor_down * kinetic_avg(r) * dphi_kininv_avg)
+        alt_energy_expansion(r) = pressure(r) / (D * volume_specific_heat(r)) - gammaG(r) * temperature(r)
+        alt_energy_expansion(r) = 1.d00/alt_energy_expansion(r)
 
-        write(io, 6001) r, temperature, temperature_unc, &
-                        volume_heat_capacity, volume_heat_capacity_unc, &
-                        pressure, pressure_unc, &
-                        energy_expansion, energy_expansion_unc, &
-                        gamma, gamma_unc, &
-                        adiabatic_compressibility, adiabatic_compressibility_unc, &
-                        isothermal_compressibility, isothermal_compressibility_unc, &
-                        isobaric_expansion, isobaric_expansion_unc, &
-                        adiabatic_expansion, adiabatic_expansion_unc, &
-                        pressure_heat_capacity, pressure_heat_capacity_unc
+        write(io, 6001) r, energy_avg(r), potential_avg(r), kinetic_avg(r), &
+                        temperature(r), pressure(r), volume_specific_heat(r), gammaG(r), &
+                        adiabatic_compressibility(r), energy_expansion(r), alt_energy_expansion(r)
 
         ! Store final RVA for the run
 
-        write (run_char, "(i0.2)") r
         save_rva_file = TRIM(save_file) // "_" // TRIM(run_char) // ".bin"
 
         open (newunit=jo, file=save_rva_file, status="new", action="write", form="unformatted")
 
             write(jo) rx, ry, rz, vx, vy, vz, ax, ay, az
-
+        
         close(jo)
 
     end do
+
+    close(io)
+
+    ! Compute uncertainties for primary magnitudes
+
+    energy_final = SUM(energy_avg)/runs
+    potential_final = SUM(potential_avg)/runs
+    kinetic_final = SUM(kinetic_avg)/runs
+    temperature_final = SUM(temperature)/runs
+    pressure_final = SUM(pressure)/runs
+    volume_specific_heat_final = SUM(volume_specific_heat)/runs
+    gammaG_final = SUM(gammaG)/runs
+    adiabatic_compressibility_final = SUM(adiabatic_compressibility)/runs
+    energy_expansion_final = SUM(energy_expansion)/runs
+    alt_energy_expansion_final = SUM(alt_energy_expansion)/runs
+
+    energy_unc = DSQRT(SUM((energy_final - energy_avg)**2)/runs/(runs-1.d00))
+    potential_unc = DSQRT(SUM((potential_final - potential_avg)**2)/runs/(runs-1.d00))
+    kinetic_unc = DSQRT(SUM((kinetic_final - kinetic_avg)**2)/runs/(runs-1.d00))
+    temperature_unc = DSQRT(SUM((temperature_final - temperature)**2)/runs/(runs-1.d00))
+    pressure_unc = DSQRT(SUM((pressure_final - pressure)**2)/runs/(runs-1.d00))
+    volume_specific_heat_unc = DSQRT(SUM((volume_specific_heat_final - volume_specific_heat)**2)/runs/(runs-1.d00))
+    gammaG_unc = DSQRT(SUM((gammaG_final - gammaG)**2)/runs/(runs-1.d00))
+    adiabatic_compressibility_unc = DSQRT(SUM((adiabatic_compressibility_final - adiabatic_compressibility)**2)/runs/(runs-1.d00))
+    energy_expansion_unc = DSQRT(SUM((energy_expansion_final - energy_expansion)**2)/runs/(runs-1.d00))
+    alt_energy_expansion_unc = DSQRT(SUM((alt_energy_expansion_final - alt_energy_expansion)**2)/runs/(runs-1.d00))
+
+    ! Compute derivative magnitudes and their uncertainties
+
+    isothermal_compressibility = 1/adiabatic_compressibility_final - &
+                                 D * temperature_final * volume_specific_heat_final * gammaG_final**2
+    isothermal_compressibility_unc = DSQRT((adiabatic_compressibility_unc/adiabatic_compressibility_final**2)**2 + &
+                                     (D*temperature_final*volume_specific_heat_final*gammaG_final**2)**2 * &
+                                     ((temperature_unc/temperature_final)**2 + &
+                                     (volume_specific_heat_unc/volume_specific_heat_final)**2 + (2*gammaG_unc/gammaG_final)**2))
+
+    isothermal_compressibility = 1/isothermal_compressibility
+    isothermal_compressibility_unc = isothermal_compressibility_unc/isothermal_compressibility**2
+
+    isobaric_expansion = D * volume_specific_heat_final * gammaG_final * isothermal_compressibility
+    isobaric_expansion_unc = isobaric_expansion * DSQRT((volume_specific_heat_unc/volume_specific_heat_final)**2 + &
+                             (gammaG_unc/gammaG_final)**2 + (isothermal_compressibility_unc/isothermal_compressibility)**2)
+
+    adiabatic_expansion = -1.d00 / gammaG_final / temperature_final
+    adiabatic_expansion_unc = ABS(adiabatic_expansion) * &
+                              DSQRT((gammaG_unc/gammaG_final)**2 + (temperature_unc/temperature_final)**2)
+
+    pressure_specific_heat = volume_specific_heat_final * isothermal_compressibility / adiabatic_compressibility_final
+    pressure_specific_heat_unc = pressure_specific_heat * DSQRT((volume_specific_heat_unc/volume_specific_heat_final)**2 &
+                                 + (isothermal_compressibility_unc/isothermal_compressibility)**2 + &
+                                 (adiabatic_compressibility_unc/adiabatic_compressibility_final)**2)
+    
+    inquire (file=final_log_file, exist=exists)
+    if (.NOT. exists) then
+        stat = "new"
+    else
+        stat = "old"
+    end if
+
+    open (newunit=io, file=final_log_file, status=stat, action="write")
+
+        write(io, 5000) "E", energy_final, "s_E", energy_unc
+        write(io, 5000) "V", potential_final, "s_V", potential_unc
+        write(io, 5000) "K", kinetic_final, "s_K", kinetic_unc
+        write(io, 5000) "T", temperature_final, "s_T", temperature_unc
+        write(io, 5000) "P", pressure_final, "s_P", pressure_unc
+        write(io, 5000) "cV", volume_specific_heat_final, "s_cV", volume_specific_heat_unc
+        write(io, 5000) "gammaG", gammaG_final, "s_gammaG", gammaG_unc
+        write(io, 5000) "kS", adiabatic_compressibility_final, "s_kS", adiabatic_compressibility_unc
+        write(io, 5000) "alphaE", energy_expansion_final, "s_alphaE", energy_expansion_unc
+        write(io, 5000) "alt_alphaE", alt_energy_expansion_final, "s_alt_alphaE", alt_energy_expansion_unc
+        write(io, 5000) "kT", isothermal_compressibility, "s_kT", isothermal_compressibility_unc
+        write(io, 5000) "alphaP", isobaric_expansion, "s_alphaP", isobaric_expansion_unc
+        write(io, 5000) "alphaS", adiabatic_expansion, "s_alphaS", adiabatic_expansion_unc
+        write(io, 5000) "cP", pressure_specific_heat, "s_cP", pressure_specific_heat_unc
 
     close(io)
 
